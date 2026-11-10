@@ -11,6 +11,7 @@ import com.revrobotics.REVLibError;
 import com.revrobotics.spark.SparkBase;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.Timer;
+import frc.robot.subsystems.drive.constants.AlphaConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -47,7 +48,7 @@ public class SparkOdometryThread {
 
   public void start() {
     if (timestampQueues.size() > 0) {
-      notifier.startPeriodic(1.0 / DriveConstants.sparkOdometryFrequency);
+      notifier.startPeriodic(1.0 / AlphaConstants.SPARK_ODOMETRY_FREQUENCY);
     }
   }
 

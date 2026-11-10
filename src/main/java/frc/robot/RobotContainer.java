@@ -7,22 +7,23 @@
 
 package frc.robot;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.drive.constants.TunerConstants;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
 import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOSim;
+// import frc.robot.subsystems.drive.module.ModuleIOSpark;
 import frc.robot.subsystems.drive.module.ModuleIOTalonFX;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -33,7 +34,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  private final Drive drive;
+  private Drive drive;
 
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -42,40 +43,41 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+
     switch (RobotConstants.currentMode) {
       case REAL:
-        // Real robot, instantiate hardware IO implementations
-        // ModuleIOTalonFX is intended for modules with TalonFX drive, TalonFX turn, and
-        // a CANcoder
         drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
+            switch (RobotConstants.robot) {
+              case COMP -> drive =
+                  new Drive(
+                      new GyroIOPigeon2(),
+                      new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                      new ModuleIOTalonFX(TunerConstants.FrontRight),
+                      new ModuleIOTalonFX(TunerConstants.BackLeft),
+                      new ModuleIOTalonFX(TunerConstants.BackRight));
+                // case ALPHA ->
+                // new Drive(
 
-        // The ModuleIOTalonFXS implementation provides an example implementation for
-        // TalonFXS controller connected to a CANdi with a PWM encoder. The
-        // implementations
-        // of ModuleIOTalonFX, ModuleIOTalonFXS, and ModuleIOSpark (from the Spark
-        // swerve
-        // template) can be freely intermixed to support alternative hardware
-        // arrangements.
-        // Please see the AdvantageKit template documentation for more information:
-        // https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#custom-module-implementations
-        //
-        // drive =
-        // new Drive(
-        // new GyroIOPigeon2(),
-        // new ModuleIOTalonFXS(TunerConstants.FrontLeft),
-        // new ModuleIOTalonFXS(TunerConstants.FrontRight),
-        // new ModuleIOTalonFXS(TunerConstants.BackLeft),
-        // new ModuleIOTalonFXS(TunerConstants.BackRight));
-        break;
+                // new GyroIONavX(),
+                // new ModuleIOSpark(AlphaConstants.FL),
+                // new ModuleIOSpark(AlphaConstants.FR),
+                // new ModuleIOSpark(AlphaConstants.BL),
+                // new ModuleIOSpark(AlphaConstants.BR));
+                // };
+                // break;
+
+              default -> drive =
+                  new Drive(
+                      new GyroIOPigeon2(),
+                      new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                      new ModuleIOTalonFX(TunerConstants.FrontRight),
+                      new ModuleIOTalonFX(TunerConstants.BackLeft),
+                      new ModuleIOTalonFX(TunerConstants.BackRight));
+            };
 
       case SIM:
-        // Sim robot, instantiate physics sim IO implementations
+        // ModuleIOSim only needs inertia and gear ratios from SwerveModuleConstants,
+        // so TunerConstants works for both bots unless you build alpha equivalents
         drive =
             new Drive(
                 new GyroIO() {},
@@ -86,7 +88,7 @@ public class RobotContainer {
         break;
 
       default:
-        // Replayed robot, disable IO implementations
+        // Replay: the config must match the robot the log came from
         drive =
             new Drive(
                 new GyroIO() {},
@@ -98,7 +100,7 @@ public class RobotContainer {
     }
 
     // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+    autoChooser = new LoggedDashboardChooser<>("Auto Choices", new SendableChooser<>());
 
     // Set up SysId routines
     autoChooser.addOption(
@@ -140,14 +142,14 @@ public class RobotContainer {
 
     // Reset gyro to 0° when B button is pressed
     controller
-        .b()
+        .start()
         .onTrue(
             Commands.runOnce(
                     () ->
                         drive.setPose(
                             new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
                     drive)
-                .ignoringDisable(true));
+                .ignoringDisable(false));
   }
 
   /**
