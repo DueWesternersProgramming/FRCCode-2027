@@ -1,6 +1,6 @@
 package frc.robot.subsystems.drive.constants;
 
-public abstract class DriveConstants {
+public class DriveConstants {
   public class DriveCommandsConstants {
     public static final double DEADBAND = 0.1;
     public static final double ANGLE_KP = 5.0;
@@ -11,5 +11,6 @@ public abstract class DriveConstants {
     public static final double FF_RAMP_RATE = 0.1; // Volts/Sec
     public static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
     public static final double WHEEL_RADIUS_RAMP_RATE = 0.05; // Rad/Sec^2
+    public static final double MAX_DRIVE_PERCENTAGE = 1;
   }
 }
