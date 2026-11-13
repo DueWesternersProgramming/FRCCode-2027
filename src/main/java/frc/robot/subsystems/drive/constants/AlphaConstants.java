@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive.constants;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
@@ -17,7 +16,6 @@ public final class AlphaConstants extends DriveConstants {
   public record SparkModuleConfig(
       int driveCanId,
       int turnCanId,
-      Rotation2d zeroRotation, // Absolute encoder reading when the wheel points forward
       boolean driveInverted,
       boolean turnInverted,
       boolean turnEncoderInverted) {}
@@ -84,15 +82,11 @@ public final class AlphaConstants extends DriveConstants {
   // ---------------------------------------------------------------------------
   // Per-module hardware: CAN IDs, encoder zeros, inversions
   // ---------------------------------------------------------------------------
-  public static final SparkModuleConfig FL =
-      new SparkModuleConfig(1, 2, Rotation2d.fromRotations(0.0), false, false, true);
+  public static final SparkModuleConfig FL = new SparkModuleConfig(1, 2, false, false, true);
 
-  public static final SparkModuleConfig FR =
-      new SparkModuleConfig(3, 4, Rotation2d.fromRotations(0.0), false, false, true);
+  public static final SparkModuleConfig FR = new SparkModuleConfig(3, 4, false, false, true);
 
-  public static final SparkModuleConfig BL =
-      new SparkModuleConfig(5, 6, Rotation2d.fromRotations(0.0), false, false, true);
+  public static final SparkModuleConfig BL = new SparkModuleConfig(5, 6, false, false, true);
 
-  public static final SparkModuleConfig BR =
-      new SparkModuleConfig(7, 8, Rotation2d.fromRotations(0.0), false, false, true);
+  public static final SparkModuleConfig BR = new SparkModuleConfig(7, 8, false, false, true);
 }
