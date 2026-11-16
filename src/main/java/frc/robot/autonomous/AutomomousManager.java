@@ -9,13 +9,10 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.commands.HighLevelCommands;
 import frc.robot.lib.BLine.FlippingUtil;
-import frc.robot.lib.BLine.FollowPath;
 import frc.robot.lib.BLine.JsonUtils;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.utils.CowboyUtils;
 import frc.robot.utils.LoggedChooser;
 import frc.robot.utils.LoggedChooser.Option;
 import java.io.IOException;
@@ -28,20 +25,6 @@ public class AutomomousManager {
   public static enum AutoMode {
     PREDEFINED_AUTO,
     DYNAMIC_AUTO
-  }
-
-  public enum BumpPositions {
-    LEFT_BUMP,
-    RIGHT_BUMP
-  }
-
-  public enum NeutralZoneIntakePositions {
-    DEEP_LEFT_SWEEP,
-    DEEP_RIGHT_SWEEP,
-    DEEP_CENTER_SWEEP,
-    SHALLOW_LEFT_SWEEP,
-    SHALLOW_RIGHT_SWEEP,
-    SHALLOW_CENTER_SWEEP
   }
 
   private final LoggedChooser<Supplier<Command>> predefinedAutoChooser;
@@ -312,38 +295,13 @@ public class AutomomousManager {
     }
 
     if (tempCombinedPaths.size() > 0) {
-      finalCommands.add(
-          BLine.BLineTrajectory(driveSubsystem, combinePaths(tempCombinedPaths), false));
+      finalCommands.add(BLine.BLineTrajectory(drive, combinePaths(tempCombinedPaths), false));
     }
 
     return Commands.sequence(finalCommands.stream().toArray(Command[]::new));
   }
 
-  private void registerTriggerCommands() {
-    FollowPath.registerEventTrigger(
-        "SimpleShoot",
-        HighLevelCommands.shootFromHopperContinousCommand(
-            intakeSubsystem,
-            feederSubsystem,
-            shooterSubsystem,
-            () -> CowboyUtils.getAllianceHubPose()));
+  private void registerTriggerCommands() {}
 
-    FollowPath.registerEventTrigger(
-        "RunIntake",
-        HighLevelCommands.intakeCommand(intakeSubsystem, feederSubsystem, ledSubsystem));
-  }
-
-  private void addPredefinedAutoOptions() {
-    this.predefinedAutoChooser.addOption(
-        new Option<>(
-            "leftsideonesweep",
-            () -> BLine.BLineTrajectory(driveSubsystem, "leftsideonesweep", false)));
-
-    this.predefinedAutoChooser.addOption(
-        new Option<>(
-            "rightsideonesweep",
-            () -> BLine.BLineTrajectory(driveSubsystem, "leftsideonesweep", true)));
-    this.predefinedAutoChooser.addOption(
-        new Option<>("5ft Test", () -> BLine.BLineTrajectory(driveSubsystem, "5ft-test", true)));
-  }
+  private void addPredefinedAutoOptions() {}
 }

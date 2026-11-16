@@ -5,17 +5,15 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.commands.automation.misc.DriveToPoseCommand;
+import frc.robot.commands.automation.DriveToPoseCommand;
 import frc.robot.lib.BLine.FlippingUtil;
 import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.utils.CowboyUtils;
 import java.io.IOException;
 
 public class BLine {
-  public static Command BLineTrajectory(
-      DriveSubsystem driveSubsystem, String name, boolean mirrorVertically) {
+  public static Command BLineTrajectory(Drive drive, String name, boolean mirrorVertically) {
     Path path = new Path(name);
 
     if (mirrorVertically) {
@@ -28,15 +26,14 @@ public class BLine {
             : path.getStartPose();
 
     return Commands.either(
-            driveSubsystem.getBLineBuilder().build(path),
+            drive.getBLineBuilder().build(path),
             Commands.sequence(
-                new DriveToPoseCommand(driveSubsystem, () -> startPose),
-                driveSubsystem.getBLineBuilder().build(path)),
+                new DriveToPoseCommand(drive, () -> startPose),
+                drive.getBLineBuilder().build(path)),
             () ->
-                driveSubsystem.getPose().getTranslation().getDistance(startPose.getTranslation())
-                        < 0.10
+                drive.getPose().getTranslation().getDistance(startPose.getTranslation()) < 0.10
                     && Math.abs(
-                            driveSubsystem
+                            drive
                                 .getPose()
                                 .getRotation()
                                 .minus(startPose.getRotation())
@@ -59,18 +56,13 @@ public class BLine {
     System.out.println("Start Pose: " + startPose);
 
     return Commands.either(
-        driveSubsystem.getBLineBuilder().build(path),
+        drive.getBLineBuilder().build(path),
         Commands.sequence(
-            new DriveToPoseCommand(driveSubsystem, () -> startPose),
-            driveSubsystem.getBLineBuilder().build(path)),
+            new DriveToPoseCommand(drive, () -> startPose), drive.getBLineBuilder().build(path)),
         () ->
-            driveSubsystem.getPose().getTranslation().getDistance(startPose.getTranslation()) < 0.10
+            drive.getPose().getTranslation().getDistance(startPose.getTranslation()) < 0.10
                 && Math.abs(
-                        driveSubsystem
-                            .getPose()
-                            .getRotation()
-                            .minus(startPose.getRotation())
-                            .getDegrees())
+                        drive.getPose().getRotation().minus(startPose.getRotation()).getDegrees())
                     < 5.0);
   }
 

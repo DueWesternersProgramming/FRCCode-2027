@@ -49,7 +49,7 @@ public class DriveCommands {
         .getTranslation();
   }
 
-  public static Command runVelocity(Drive drive, ChassisSpeeds speeds, boolean fieldRelative) {
+  public static Command runChassisSpeeds(Drive drive, ChassisSpeeds speeds, boolean fieldRelative) {
     return Commands.run(
         () -> {
           boolean isRed =
@@ -59,9 +59,9 @@ public class DriveCommands {
           if (fieldRelative) {
             Rotation2d rotation =
                 isRed ? drive.getRotation().plus(new Rotation2d(Math.PI)) : drive.getRotation();
-            drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, rotation), true);
+            drive.runChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, rotation), true);
           } else {
-            drive.runVelocity(speeds, true);
+            drive.runChassisSpeeds(speeds, true);
           }
         },
         drive);
@@ -101,7 +101,7 @@ public class DriveCommands {
                       * drive.getMaxAngularSpeedRadPerSec()
                       * DriveCommandsConstants.MAX_DRIVE_PERCENTAGE);
 
-          drive.runVelocity(speeds, true);
+          drive.runChassisSpeeds(speeds, true);
         },
         drive);
   }
@@ -147,7 +147,7 @@ public class DriveCommands {
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
 
-              drive.runVelocity(speeds, true);
+              drive.runChassisSpeeds(speeds, true);
             },
             drive)
 
@@ -237,7 +237,7 @@ public class DriveCommands {
                 () -> {
                   double speed =
                       limiter.calculate(DriveCommandsConstants.WHEEL_RADIUS_MAX_VELOCITY);
-                  drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed), false);
+                  drive.runChassisSpeeds(new ChassisSpeeds(0.0, 0.0, speed), false);
                 },
                 drive)),
 

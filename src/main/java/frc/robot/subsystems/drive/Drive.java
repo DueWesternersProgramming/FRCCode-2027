@@ -12,7 +12,7 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.hal.FRCNetComm.tInstances;
 import edu.wpi.first.hal.FRCNetComm.tResourceType;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -22,8 +22,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -33,11 +31,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.RobotConstants;
 import frc.robot.RobotConstants.Mode;
+import frc.robot.SheriffState;
+import frc.robot.lib.BLine.FollowPath;
 import frc.robot.subsystems.drive.constants.TunerConstants;
 import frc.robot.subsystems.drive.gyro.GyroIO;
 import frc.robot.subsystems.drive.gyro.GyroIOInputsAutoLogged;
 import frc.robot.subsystems.drive.module.Module;
 import frc.robot.subsystems.drive.module.ModuleIO;
+import frc.robot.utils.TimestampedPose;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.littletonrobotics.junction.AutoLogOutput;
@@ -76,6 +77,8 @@ public class Drive extends SubsystemBase {
   private SwerveDrivePoseEstimator poseEstimator =
       new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, Pose2d.kZero);
 
+  private final FollowPath.Builder bLinePathBuilder;
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -104,6 +107,26 @@ public class Drive extends SubsystemBase {
                 (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
                 (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+
+    // B-Line Path Builder
+    bLinePathBuilder =
+        new FollowPath.Builder(
+                this, // The drive subsystem to require
+                this::getPose, // Supplier for current robot pose
+                this::getChassisSpeedsRobotRelative, // Supplier for current speeds
+                this::runChassisSpeedsBline, // Consumer to drive the robot
+                new PIDController(10.0, 0.0, 0.0), // Translation PID
+                new PIDController(3.0, 0.0, 0.0), // Rotation PID
+                new PIDController(2.0, 0.0, 0.0) // Cross-track PID
+                )
+            .withDefaultShouldFlip(); // Auto-flip for red alliance
+
+    // AdvantageKit logging
+    FollowPath.setDoubleLoggingConsumer(p -> Logger.recordOutput(p.getFirst(), p.getSecond()));
+    FollowPath.setBooleanLoggingConsumer(p -> Logger.recordOutput(p.getFirst(), p.getSecond()));
+    FollowPath.setPoseLoggingConsumer(p -> Logger.recordOutput(p.getFirst(), p.getSecond()));
+    FollowPath.setTranslationListLoggingConsumer(
+        p -> Logger.recordOutput(p.getFirst(), p.getSecond()));
   }
 
   @Override
@@ -159,16 +182,32 @@ public class Drive extends SubsystemBase {
 
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+
+      updateOdometrySensorMeasurements();
     }
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && RobotConstants.currentMode != Mode.SIM);
   }
 
+  public FollowPath.Builder getBLineBuilder() {
+    return bLinePathBuilder;
+  }
+
+  private void updateOdometrySensorMeasurements() {
+
+    // PV poses:
+
+    TimestampedPose timestampedPose;
+    while ((timestampedPose = SheriffState.getAprilTagCameraMeasurments().poll()) != null) {
+      poseEstimator.addVisionMeasurement(timestampedPose.pose(), timestampedPose.timestamp());
+    }
+  }
+
   /**
    * @param speeds Speeds in meters/sec
    */
-  public void runVelocity(ChassisSpeeds speeds, boolean fieldRelative) {
+  public void runChassisSpeeds(ChassisSpeeds speeds, boolean fieldRelative) {
     // Calculate module setpoints
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
 
@@ -199,6 +238,18 @@ public class Drive extends SubsystemBase {
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
   }
 
+  public void runChassisSpeedsBline(ChassisSpeeds speeds) {
+    ChassisSpeeds out = speeds;
+    // if (SheriffState.isObstacleAvoidanceEnabled) {
+    // out = avoidanceFilter.filter(speeds, getPose(), obstacles);
+    // Logger.recordOutput("Avoidance/DesiredSpeeds", speeds);
+    // Logger.recordOutput("Avoidance/OutputSpeeds", out);
+    // Logger.recordOutput("Avoidance/ThreatCount",
+    // avoidanceFilter.getThreatCount());
+    // }
+    runChassisSpeeds(out, false);
+  }
+
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {
@@ -208,7 +259,7 @@ public class Drive extends SubsystemBase {
 
   /** Stops the drive. */
   public void stop() {
-    runVelocity(new ChassisSpeeds(), false);
+    runChassisSpeeds(new ChassisSpeeds(), false);
   }
 
   /**
@@ -256,9 +307,14 @@ public class Drive extends SubsystemBase {
   }
 
   /** Returns the measured chassis speeds of the robot. */
-  @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  private ChassisSpeeds getChassisSpeeds() {
+  @AutoLogOutput(key = "SwerveChassisSpeedsRobotRelative/Measured")
+  private ChassisSpeeds getChassisSpeedsRobotRelative() {
     return kinematics.toChassisSpeeds(getModuleStates());
+  }
+
+  @AutoLogOutput(key = "SwerveChassisSpeeds/MeasuredFieldRelative")
+  private ChassisSpeeds getFieldRelativeChassisSpeeds() {
+    return ChassisSpeeds.fromRobotRelativeSpeeds(getChassisSpeedsRobotRelative(), getRotation());
   }
 
   /** Returns the position of each module in radians. */
@@ -293,15 +349,6 @@ public class Drive extends SubsystemBase {
   /** Resets the current odometry pose. */
   public void setPose(Pose2d pose) {
     poseEstimator.resetPosition(rawGyroRotation, getModulePositions(), pose);
-  }
-
-  /** Adds a new timestamped vision measurement. */
-  public void addVisionMeasurement(
-      Pose2d visionRobotPoseMeters,
-      double timestampSeconds,
-      Matrix<N3, N1> visionMeasurementStdDevs) {
-    poseEstimator.addVisionMeasurement(
-        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
   }
 
   /** Returns the maximum linear speed in meters per sec. */

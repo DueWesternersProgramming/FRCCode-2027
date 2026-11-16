@@ -79,7 +79,7 @@ public class DriveToPoseCommand extends Command {
 
     System.out.printf("PID Outputs: vx=%.2f vy=%.2f omega=%.2f%n", vx, vy, omega);
 
-    drive.runVelocity(speeds, true);
+    drive.runChassisSpeeds(speeds, true);
   }
 
   @Override
@@ -89,7 +89,7 @@ public class DriveToPoseCommand extends Command {
 
   @Override
   public void end(boolean interrupted) {
-    drive.runChassisSpeeds(new ChassisSpeeds());
+    drive.runChassisSpeeds(new ChassisSpeeds(), true);
 
     xController.reset();
     yController.reset();
