@@ -7,7 +7,7 @@
 
 package frc.robot.subsystems.drive.module;
 
-import static frc.robot.PhoenixUtil.*;
+import static frc.robot.utils.PhoenixUtil.*;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;

@@ -1,0 +1,18 @@
+package frc.robot.commands;
+
+import edu.wpi.first.wpilibj2.command.PrintCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.subsystems.drive.Drive;
+
+public class RobotSystemsCheckCommand extends SequentialCommandGroup {
+  public RobotSystemsCheckCommand(Drive drive) {
+    addCommands(
+        new PrintCommand("Starting Robot Systems Checks!"),
+        new PrintCommand("Make Sure The Robot Is Not On The Ground And Motors Are Clear..."),
+        new WaitCommand(3),
+        // Add commands (per robot) for a complete system check off ALL subsystems of
+        // the robot
+        new PrintCommand("Testing Complete!"));
+  }
+}

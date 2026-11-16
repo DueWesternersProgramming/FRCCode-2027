@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot;
+package frc.robot.utils;
 
 import com.ctre.phoenix6.StatusCode;
 import java.util.function.Supplier;

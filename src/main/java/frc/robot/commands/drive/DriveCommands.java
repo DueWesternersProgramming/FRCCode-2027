@@ -5,7 +5,7 @@
 // license that can be found in the LICENSE file
 // at the root directory of this project.
 
-package frc.robot.commands;
+package frc.robot.commands.drive;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
@@ -49,6 +49,24 @@ public class DriveCommands {
         .getTranslation();
   }
 
+  public static Command runVelocity(Drive drive, ChassisSpeeds speeds, boolean fieldRelative) {
+    return Commands.run(
+        () -> {
+          boolean isRed =
+              DriverStation.getAlliance().isPresent()
+                  && DriverStation.getAlliance().get() == Alliance.Red;
+
+          if (fieldRelative) {
+            Rotation2d rotation =
+                isRed ? drive.getRotation().plus(new Rotation2d(Math.PI)) : drive.getRotation();
+            drive.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, rotation), true);
+          } else {
+            drive.runVelocity(speeds, true);
+          }
+        },
+        drive);
+  }
+
   /**
    * Field relative drive command using two joysticks (controlling linear and angular velocities).
    */
@@ -82,16 +100,8 @@ public class DriveCommands {
                   omega
                       * drive.getMaxAngularSpeedRadPerSec()
                       * DriveCommandsConstants.MAX_DRIVE_PERCENTAGE);
-          boolean isFlipped =
-              DriverStation.getAlliance().isPresent()
-                  && DriverStation.getAlliance().get() == Alliance.Red;
 
-          drive.runVelocity(
-              ChassisSpeeds.fromFieldRelativeSpeeds(
-                  speeds,
-                  isFlipped
-                      ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                      : drive.getRotation()));
+          drive.runVelocity(speeds, true);
         },
         drive);
   }
@@ -136,15 +146,8 @@ public class DriveCommands {
                       linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
                       linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
                       omega);
-              boolean isFlipped =
-                  DriverStation.getAlliance().isPresent()
-                      && DriverStation.getAlliance().get() == Alliance.Red;
-              drive.runVelocity(
-                  ChassisSpeeds.fromFieldRelativeSpeeds(
-                      speeds,
-                      isFlipped
-                          ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation()));
+
+              drive.runVelocity(speeds, true);
             },
             drive)
 
@@ -234,7 +237,7 @@ public class DriveCommands {
                 () -> {
                   double speed =
                       limiter.calculate(DriveCommandsConstants.WHEEL_RADIUS_MAX_VELOCITY);
-                  drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed));
+                  drive.runVelocity(new ChassisSpeeds(0.0, 0.0, speed), false);
                 },
                 drive)),
 
