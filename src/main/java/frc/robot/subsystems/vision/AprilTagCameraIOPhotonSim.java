@@ -1,7 +1,7 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
-import frc.robot.subsystems.vision.VisionSubsystemConstants.VisionSource;
+import frc.robot.subsystems.vision.VisionConstants.VisionSource;
 import frc.robot.utils.CowboyUtils;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -20,7 +20,7 @@ public class AprilTagCameraIOPhotonSim extends AprilTagCameraIOPhoton {
     cameraSim.setMaxSightRange(10.0);
     cameraSim.setWireframeResolution(1);
 
-    VisionSubsystemConstants.aprilTagSim.ifPresent(
+    VisionConstants.aprilTagSim.ifPresent(
         aprilTagSim -> aprilTagSim.addCamera(cameraSim, source.robotToCamera()));
   }
 
@@ -28,7 +28,7 @@ public class AprilTagCameraIOPhotonSim extends AprilTagCameraIOPhoton {
   public void updateInputs(AprilTagIOInputs inputs) {
     super.updateInputs(inputs);
 
-    VisionSubsystemConstants.aprilTagSim.ifPresent(
+    VisionConstants.aprilTagSim.ifPresent(
         aprilTagSim -> {
           FieldObject2d visionEstimation =
               aprilTagSim.getDebugField().getObject("VisionEstimation");

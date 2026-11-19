@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import org.photonvision.simulation.VisionSystemSim;
 
-public class VisionSubsystemConstants {
+public class VisionConstants {
 
   public static final record AprilTagCameraConfig(
       VisionSource source, int servoPort, SimCameraConfig simConfig) {}

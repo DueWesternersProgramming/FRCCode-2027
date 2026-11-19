@@ -9,6 +9,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.RobotConstants;
 
 public class CowboyUtils {
 
@@ -25,6 +26,18 @@ public class CowboyUtils {
     return DriverStation.getAlliance().isPresent()
         ? (DriverStation.getAlliance().get() == Alliance.Blue)
         : (false);
+  }
+
+  public static boolean isFMSAttached() {
+    return DriverStation.isFMSAttached();
+  }
+
+  /**
+   * Returns true if the robot is running in simulation and is connected to the FMS. This is used to
+   * determine if the robot is running in a competition simulation.
+   */
+  public static boolean isCompBotMode() {
+    return RobotConstants.robot.equals(RobotConstants.Robot.COMP);
   }
 
   public static boolean isSim() {

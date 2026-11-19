@@ -4,24 +4,24 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.RobotConstants;
 import frc.robot.SheriffState;
-import frc.robot.subsystems.vision.VisionSubsystemConstants.AprilTagCameraConfig;
+import frc.robot.subsystems.vision.VisionConstants.AprilTagCameraConfig;
 import java.util.ArrayList;
 import java.util.List;
 import org.littletonrobotics.junction.Logger;
 import org.photonvision.simulation.VisionSystemSim;
 
-public class VisionSubsystem extends SubsystemBase {
+public class Vision extends SubsystemBase {
   public static VisionSystemSim visionSim;
 
   public static record AprilTagCamera(
       AprilTagCameraIO io,
       AprilTagIOInputsAutoLogged inputs,
-      VisionSubsystemConstants.VisionSource source) {}
+      VisionConstants.VisionSource source) {}
 
   public List<AprilTagCamera> aprilTagCameras = new ArrayList<>();
 
-  public VisionSubsystem() {
-    for (AprilTagCameraConfig config : VisionSubsystemConstants.CAMERA_CONFIGS) {
+  public Vision() {
+    for (AprilTagCameraConfig config : VisionConstants.CAMERA_CONFIGS) {
       AprilTagCameraIO io;
 
       switch (RobotConstants.currentMode) {
@@ -51,7 +51,7 @@ public class VisionSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     if (RobotBase.isSimulation()) {
-      VisionSubsystemConstants.aprilTagSim.get().update(SheriffState.robotPose);
+      VisionConstants.aprilTagSim.get().update(SheriffState.robotPose);
     }
     for (AprilTagCamera camera : aprilTagCameras) {
       camera.io.updateInputs(camera.inputs);

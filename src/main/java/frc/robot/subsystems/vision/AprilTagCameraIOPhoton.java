@@ -3,7 +3,7 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.SheriffState;
-import frc.robot.subsystems.vision.VisionSubsystemConstants.VisionSource;
+import frc.robot.subsystems.vision.VisionConstants.VisionSource;
 import frc.robot.utils.CowboyUtils;
 import frc.robot.utils.TimestampedPose;
 import java.util.List;

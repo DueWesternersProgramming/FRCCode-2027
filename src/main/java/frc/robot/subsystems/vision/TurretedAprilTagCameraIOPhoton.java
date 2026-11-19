@@ -6,7 +6,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.Servo;
 import frc.robot.SheriffState;
-import frc.robot.subsystems.vision.VisionSubsystemConstants.VisionSource;
+import frc.robot.subsystems.vision.VisionConstants.VisionSource;
 import frc.robot.utils.CowboyUtils;
 import frc.robot.utils.TimestampedPose;
 import java.util.List;

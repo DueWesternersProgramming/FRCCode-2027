@@ -45,8 +45,15 @@ public final class RobotConstants {
 
   public static final Robot robot = detectRobot();
 
+  /**
+   * Detects the robot type based on the MAC address of the network interface. If the robot is not
+   * running on a real robot, it defaults to COMP. If the MAC address is not recognized, it also
+   * defaults to COMP and reports an error.
+   *
+   * @return The detected robot type (ALPHA or COMP).
+   */
   private static Robot detectRobot() {
-    if (!RobotBase.isReal()) return Robot.COMP; // Default to COMP for simulation and replay
+    if (!RobotBase.isReal()) return Robot.COMP;
     try {
       for (var nic : Collections.list(NetworkInterface.getNetworkInterfaces())) {
         byte[] mac = nic.getHardwareAddress();

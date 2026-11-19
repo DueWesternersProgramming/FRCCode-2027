@@ -25,6 +25,7 @@ import frc.robot.subsystems.drive.module.ModuleIO;
 import frc.robot.subsystems.drive.module.ModuleIOSim;
 // import frc.robot.subsystems.drive.module.ModuleIOSpark;
 import frc.robot.subsystems.drive.module.ModuleIOTalonFX;
+import frc.robot.subsystems.lidar.LidarIO;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -36,6 +37,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
 
   private Drive drive;
+  private LidarIO lidar;
 
   private final CommandXboxController controller = new CommandXboxController(0);
 
@@ -45,6 +47,8 @@ public class RobotContainer {
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
+    lidar = new LidarIO() {}; // Lidar DISABLED (dummy IO)
+
     switch (RobotConstants.currentMode) {
       case REAL:
         drive =
@@ -52,6 +56,7 @@ public class RobotContainer {
               case COMP -> drive =
                   new Drive(
                       new GyroIOPigeon2(),
+                      lidar,
                       new ModuleIOTalonFX(TunerConstants.FrontLeft),
                       new ModuleIOTalonFX(TunerConstants.FrontRight),
                       new ModuleIOTalonFX(TunerConstants.BackLeft),
@@ -70,6 +75,7 @@ public class RobotContainer {
               default -> drive =
                   new Drive(
                       new GyroIOPigeon2(),
+                      lidar,
                       new ModuleIOTalonFX(TunerConstants.FrontLeft),
                       new ModuleIOTalonFX(TunerConstants.FrontRight),
                       new ModuleIOTalonFX(TunerConstants.BackLeft),
@@ -82,6 +88,7 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIO() {},
+                lidar,
                 new ModuleIOSim(TunerConstants.FrontLeft),
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
@@ -93,6 +100,7 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIO() {},
+                new LidarIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
