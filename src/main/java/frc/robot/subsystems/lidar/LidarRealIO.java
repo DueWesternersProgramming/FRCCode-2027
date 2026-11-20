@@ -1,13 +1,23 @@
 package frc.robot.subsystems.lidar;
 
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.networktables.TimestampedDoubleArray;
+import edu.wpi.first.util.WPIUtilJNI;
 import frc.robot.subsystems.drive.constants.AlphaConstants;
 import frc.robot.subsystems.drive.constants.TunerConstants;
 import frc.robot.utils.CowboyUtils;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
+import org.littletonrobotics.junction.Logger;
 
 public class LidarRealIO implements LidarIO {
 
@@ -36,50 +46,53 @@ public class LidarRealIO implements LidarIO {
   }
 
   @Override
-  public void updateObstacles() {
-    // for (TimestampedDoubleArray scan : lidarSub.readQueue()) {
+  public void updateObstacles(
+      SwerveDrivePoseEstimator poseEstimator,
+      Supplier<ChassisSpeeds> getFieldRelativeChassisSpeeds) {
+    for (TimestampedDoubleArray scan : lidarSub.readQueue()) {
 
-    //   double currentTimeStamp = scan.timestamp / 1e6; // convert to seconds
-    //   double scanTimestamp = scan.value[0];
+      double currentTimeStamp = scan.timestamp / 1e6; // convert to seconds
+      double scanTimestamp = scan.value[0];
 
-    //   // System.out.println("TimestampedDoubleArray TS: " + currentTimeStamp + "\t
-    //   // Scan Time: " + scanTimestamp
-    //   // + "\t Delta: " + (currentTimeStamp - scanTimestamp));
+      // System.out.println("TimestampedDoubleArray TS: " + currentTimeStamp + "\t
+      // Scan Time: " + scanTimestamp
+      // + "\t Delta: " + (currentTimeStamp - scanTimestamp));
 
-    //   Pose2d robotAtScan = hybridOdometry.sampleAt(scanTimestamp).orElse(getPose());
+      Pose2d robotAtScan =
+          poseEstimator.sampleAt(scanTimestamp).orElse(poseEstimator.getEstimatedPosition());
 
-    //   List<Translation2d> detections = new ArrayList<>();
+      ArrayList<Translation2d> detections = new ArrayList<>();
 
-    //   int raw = 0;
-    //   // Filter out any detections that are outside the field boundaries
-    //   for (int i = 1; i + 2 < scan.value.length; i += 3) {
-    //     raw++;
-    //     Translation2d local = new Translation2d(scan.value[i], scan.value[i + 1]);
-    //     Translation2d field =
-    //         robotAtScan.getTranslation().plus(local.rotateBy(robotAtScan.getRotation()));
-    //     boolean onField =
-    //         field.getX() > LidarConstants.FIELD_EDGE_MARGIN_M
-    //             && field.getX() < LidarConstants.FIELD_LENGTH_M -
-    // LidarConstants.FIELD_EDGE_MARGIN_M
-    //             && field.getY() > LidarConstants.FIELD_EDGE_MARGIN_M
-    //             && field.getY() < LidarConstants.FIELD_WIDTH_M -
-    // LidarConstants.FIELD_EDGE_MARGIN_M;
-    //     if (onField) detections.add(field);
-    //   }
-    //   obstacleTracker.update(detections, scanTimestamp, getFieldRelativeChassisSpeeds());
+      int raw = 0;
+      // Filter out any detections that are outside the field boundaries
+      for (int i = 1; i + 2 < scan.value.length; i += 3) {
+        raw++;
+        Translation2d local = new Translation2d(scan.value[i], scan.value[i + 1]);
+        Translation2d field =
+            robotAtScan.getTranslation().plus(local.rotateBy(robotAtScan.getRotation()));
+        boolean onField =
+            field.getX() > LidarConstants.FIELD_EDGE_MARGIN_M
+                && field.getX() < LidarConstants.FIELD_LENGTH_M - LidarConstants.FIELD_EDGE_MARGIN_M
+                && field.getY() > LidarConstants.FIELD_EDGE_MARGIN_M
+                && field.getY() < LidarConstants.FIELD_WIDTH_M - LidarConstants.FIELD_EDGE_MARGIN_M;
+        if (onField) detections.add(field);
+      }
+      obstacleTracker.update(detections, scanTimestamp, getFieldRelativeChassisSpeeds.get());
 
-    //   Logger.recordOutput("Avoidance/RawDetections", raw);
-    //   Logger.recordOutput("Avoidance/DetectionsKept", detections.size());
-    //   Logger.recordOutput("Avoidance/ScanAge", currentTimeStamp - scanTimestamp);
-    // }
-    // obstacles =
-    //     obstacleTracker.getObstacles(
-    //         WPIUtilJNI.now() * 1e-6, OBSTACLE_HALF, getFieldRelativeChassisSpeeds());
-    // Logger.recordOutput("Avoidance/ObstacleCount", obstacles.size());
-    // Logger.recordOutput(
-    //     "Avoidance/Obstacles",
-    //     obstacles.stream()
-    //         .map(o -> new Pose2d(o.center(), new Rotation2d()))
-    //         .toArray(Pose2d[]::new));
+      Logger.recordOutput("Avoidance/RawDetections", raw);
+      Logger.recordOutput("Avoidance/DetectionsKept", detections.size());
+      Logger.recordOutput("Avoidance/ScanAge", currentTimeStamp - scanTimestamp);
+    }
+    obstacles =
+        obstacleTracker.getObstacles(
+            WPIUtilJNI.now() * 1e-6,
+            LidarConstants.OBSTACLE_HALF,
+            getFieldRelativeChassisSpeeds.get());
+    Logger.recordOutput("Avoidance/ObstacleCount", obstacles.size());
+    Logger.recordOutput(
+        "Avoidance/Obstacles",
+        obstacles.stream()
+            .map(o -> new Pose2d(o.center(), new Rotation2d()))
+            .toArray(Pose2d[]::new));
   }
 }

@@ -177,9 +177,11 @@ public class Drive extends SubsystemBase {
 
       // Apply update
       poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
-
-      updateOdometrySensorMeasurements();
     }
+
+    updateOdometrySensorMeasurements();
+
+    lidarIO.updateObstacles(poseEstimator, this::getFieldRelativeChassisSpeeds);
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && RobotConstants.currentMode != Mode.SIM);
